@@ -31,7 +31,6 @@ def search(request):
     search_query = request.GET.get('search_box', None)
     if search_query:
         channels = client.search.channels(search_query, limit=100)
-        print(channels)
         sorting_dict = {}
         for channel in channels:
     	    levenshtein_distance = distance(search_query, channel.display_name)
@@ -56,11 +55,32 @@ def get_followers(request):
     user = request.user
     social = user.social_auth.get(provider='twitch')
     client = TwitchClient(client_id='9hfygng7md3x7maw2g4uko0ednm3hk', oauth_token=social.extra_data['access_token'])
+    return JsonResponse({'follows': client.users.get_follows(social.uid)})
+
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def follow_user(request, user_id):
+    """
+    This function follows a user
+    """
+    user = request.user
+    social = user.social_auth.get(provider='twitch')
+    client = TwitchClient(client_id='9hfygng7md3x7maw2g4uko0ednm3hk', oauth_token=social.extra_data['access_token'])
+    return JsonResponse({'follows': client.users.follow_channel(social.uid, user_id)})
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def unfollow_user(request, user_id):
+    """
+    This function unfollows a user
+    """
+    user = request.user
+    social = user.social_auth.get(provider='twitch')
+    client = TwitchClient(client_id='9hfygng7md3x7maw2g4uko0ednm3hk', oauth_token=social.extra_data['access_token'])
+    return JsonResponse({'follows': client.users.unfollow_channel(social.uid, user_id)})  
 
 def logout(request):
     """This function logs out an authenticated user"""
     auth_logout(request)
     return render(request, 'home.html')
-
-#def follow_user(request, username):
-	# Will follow user

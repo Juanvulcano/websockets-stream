@@ -155,6 +155,9 @@ AUTHENTICATION_BACKENDS = {
     'django.contrib.auth.backends.ModelBackend',
 }
 
+#SOCIAL_AUTH_TWITCH_IGNORE_DEFAULT_SCOPE = True
+SOCIAL_AUTH_TWITCH_SCOPE = ['user_follows_edit', "user_read"]
+
 SOCIAL_AUTH_RAISE_EXCEPTIONS = True
 RAISE_EXCEPTIONS = True
 DEBUG = True
