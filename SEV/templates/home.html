@@ -2,4 +2,12 @@
 {% block content %}
   <h2>Homepage</h2>
   <p>Hello {{ user.username }}</p>
+
+
+<h3> Search for Twitch Users </h3>
+<form type="get" action="/streamtwitch/search" style="margin: 0">
+    <input  id="search_box" type="text" name="search_box"  placeholder="Search..." >
+    <button id="search_submit" type="submit" >Submit</button>
+</form>
+
 {% endblock %}

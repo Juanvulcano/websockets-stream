@@ -4,4 +4,5 @@ djangorestframework
 markdown
 django-filter
 social-auth-app-django
-django-rest-framework-social-oauth2
+python-twitch-client
+python-levenshtein
