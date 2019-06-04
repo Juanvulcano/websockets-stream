@@ -84,13 +84,16 @@ WSGI_APPLICATION = 'SEV.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'HOST': 'db',
-        'PORT': 5432,
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'streamer_prod',
+        'USER': 'streamer',
+        'HOST': 'localhost',
+        'PASSWORD': 'juan1000',
+        'PORT': '',
     }
 }
+
+
 
 ALLOWED_HOSTS = ['*']
 # Allows compatibility with Windows 10 (Not safe in production)
