@@ -1,3 +1,4 @@
+import requests
 from django.shortcuts import render
 from django.contrib.auth import logout as auth_logout
 from django.http import JsonResponse
@@ -5,6 +6,7 @@ from Levenshtein import distance
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from social_core.backends.twitch import TwitchOAuth2
+from social_django.utils import load_strategy
 from twitch import TwitchClient
 from .models import Event
 
@@ -75,7 +77,8 @@ def follow_user(request, user_id):
     """
     user = request.user
     social = user.social_auth.get(provider='twitch')
-    client = TwitchClient(client_id='9hfygng7md3x7maw2g4uko0ednm3hk', oauth_token=social.extra_data['access_token'])
+    access_token = social.get_access_token(load_strategy())
+    client = TwitchClient(client_id='9hfygng7md3x7maw2g4uko0ednm3hk', oauth_token=access_token)
     last_follow = Event.objects.filter(user=user, streamer_id=user_id, event_type="Followed user").order_by('-id').first()
     last_unfollow = Event.objects.filter(user=user, streamer_id=user_id, event_type="Unfollowed user").order_by('-id').first()
 
@@ -127,3 +130,14 @@ def logout(request):
     """This function logs out an authenticated user"""
     auth_logout(request)
     return render(request, 'home.html')
+
+
+def follow_webhook(request, user_id):
+    TWITCH_ENDPOINT = "https://api.twitch.tv/helix/webhooks/hub"
+    r = requests.post(TWITCH_ENDPOINT, data={"callback":"http://test.server", "mode":"subscribe", "topic": "https://api.twitch.tv/helix/users/follows?first=1&to_id="+user_id})
+    print(r)
+    print(r.status_code, r.reason)
+    print(r.text)
+    return(JsonResponse(r))
+
+
