@@ -1,4 +1,5 @@
 import requests
+import json
 from django.shortcuts import render
 from django.contrib.auth import logout as auth_logout
 from django.http import JsonResponse
@@ -27,7 +28,7 @@ def home(request):
 @permission_classes((IsAuthenticated,))
 def search(request):
     """
-    This function returns a json list with up to 100 users by relevance using Levenshtein distance
+        This function returns a json list with up to 100 users by relevance using Levenshtein distance
     """
     user = request.user
     social = user.social_auth.get(provider='twitch')
@@ -54,8 +55,8 @@ def search(request):
 @permission_classes((IsAuthenticated,))
 def get_followers(request):
     """
-    This function creates an event for all the followed channels of our user
-    It returns a json with the information of all the followers of our user
+        This function creates an event for all the followed channels of our user
+        It returns a json with the information of all the followers of our user
     """
     user = request.user
     social = user.social_auth.get(provider='twitch')
@@ -72,8 +73,8 @@ def get_followers(request):
 @permission_classes((IsAuthenticated,))
 def follow_user(request, user_id):
     """
-    This function follows a streamer as long as the last follow event is older
-    than the last unfollow event.
+        This function follows a streamer as long as the last follow event is older
+        than the last unfollow event.
     """
     user = request.user
     social = user.social_auth.get(provider='twitch')
@@ -100,8 +101,8 @@ def follow_user(request, user_id):
 @permission_classes((IsAuthenticated,))
 def unfollow_user(request, user_id):
     """
-    This function unfollows a user as long as the last follow event is more recent than the last
-    unfollow event.
+        This function unfollows a user as long as the last follow 
+        event is more recent than the last unfollow event.
     """
     user = request.user
     social = user.social_auth.get(provider='twitch')
@@ -127,17 +128,53 @@ def unfollow_user(request, user_id):
         return JsonResponse({'response': "User succesfully unfollowed"})  
 
 def logout(request):
-    """This function logs out an authenticated user"""
+    """
+       This function logs out an authenticated user
+    """
     auth_logout(request)
     return render(request, 'home.html')
 
 
 def follow_webhook(request, user_id):
     TWITCH_ENDPOINT = "https://api.twitch.tv/helix/webhooks/hub"
-    r = requests.post(TWITCH_ENDPOINT, data={"callback":"http://test.server", "mode":"subscribe", "topic": "https://api.twitch.tv/helix/users/follows?first=1&to_id="+user_id})
-    print(r)
-    print(r.status_code, r.reason)
+    user = request.user
+    social = user.social_auth.get(provider='twitch')
+    access_token = social.get_access_token(load_strategy())
+    client = TwitchClient(client_id='9hfygng7md3x7maw2g4uko0ednm3hk', oauth_token=access_token)
+    r = requests.post(TWITCH_ENDPOINT, data={"hub.callback":"http://http://142.93.103.187:8000/streamtwitch/follow_webhook", "hub.mode":"subscribe", "hub.topic": "https://api.twitch.tv/helix/users/follows?first=1&to_id="+user_id}, headers={"Authorization": "Bearer " + access_token, "Client-ID": "9hfygng7md3x7maw2g4uko0ednm3hk"}) #"hub.lease_seconds": "0"
     print(r.text)
-    return(JsonResponse(r))
+    print(r)
+    print(r.status_code)
+    print(vars(r))
+    if r.status_code == 202:
+    	return(JsonResponse({'response': "Succesfully subscribed to webhook"}))
+    return(JsonResponse({'response': "Couldn't subscribe to webhook"}))
+
+
+def get_webhooks(request):
+    """
+       Returns a list of the currently available webhooks
+    """
+    TWITCH_ENDPOINT = "https://api.twitch.tv/helix/webhooks/subscriptions"
+    response = requests.get(TWITCH_ENDPOINT, headers= {"Client-Id": "9hfygng7md3x7maw2g4uko0ednm3hk", "Authorization": "Bearer " + get_app_token()})
+    if response.status_code == 200:
+        json_data = json.loads(response.text)
+        return(JsonResponse(json_data))
+    return(JsonResponse({'Response': "Couldn't get webhooks"}))
+
+def get_app_token():
+    """
+       Returns an app token if available, otherwise returns False
+    """ 
+    CLIENT_ID="9hfygng7md3x7maw2g4uko0ednm3hk"
+    CLIENT_SECRET='fbqi3foiy9pnir568qi4tswl17ubkx'
+    GRANT_TYPE="client_credentials"
+    TWITCH_ENDPOINT = "https://id.twitch.tv/oauth2/token"
+    response = requests.post(TWITCH_ENDPOINT, data={"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET, "grant_type": GRANT_TYPE, "scope": "user:edit"}) 
+    if response.status_code == 200:
+    	json_data = json.loads(response.text)
+    	print(json_data)
+    	return(json_data["access_token"])
+    return(False)
 
 
