@@ -137,16 +137,22 @@ def logout(request):
 
 def webhook_handler(request):
 	print(var(request))
+	print(request.hub.challenge)
+	# This should return the challenge
 	return(JsonResponse("Hi"))
 
 
 def follow_webhook(request, user_id):
+	"""
+	   Subscribe to a follow webhook
+	   Notifies if user has a new follower
+	"""
     TWITCH_ENDPOINT = "https://api.twitch.tv/helix/webhooks/hub"
     user = request.user
     social = user.social_auth.get(provider='twitch')
     access_token = social.get_access_token(load_strategy())
     client = TwitchClient(client_id='9hfygng7md3x7maw2g4uko0ednm3hk', oauth_token=access_token)
-    r = requests.post(TWITCH_ENDPOINT, data={"hub.callback":"http://http://142.93.103.187:8000/streamtwitch/webhook_handler/", "hub.mode":"subscribe", "hub.topic": "https://api.twitch.tv/helix/users/follows?first=1&to_id="+user_id, "hub.lease_seconds": "1000"}, headers={"Authorization": "Bearer " + access_token, "Client-ID": "9hfygng7md3x7maw2g4uko0ednm3hk"}) #
+    r = requests.post(TWITCH_ENDPOINT, data={"hub.callback":"http://http://142.93.103.187:8000/streamtwitch/webhook_handler/", "hub.mode":"subscribe", "hub.topic": "https://api.twitch.tv/helix/users/follows?to_id="+user_id, "hub.lease_seconds": "1000"}, headers={"Authorization": "Bearer " + access_token, "Client-ID": "9hfygng7md3x7maw2g4uko0ednm3hk"}) #
     print(r.text)
     print(r)
     print(r.status_code)
